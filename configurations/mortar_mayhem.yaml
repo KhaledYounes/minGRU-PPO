@@ -1,0 +1,39 @@
+env_type: "MemoryGym"
+env_name: "MortarMayhem-v0"
+reset_params:
+  start-seed: 0
+  num-seeds: 100000
+  agent_scale: 0.25
+  agent_speed: 3
+  allowed_commands: 9
+  command_count: [ 10 ]
+  command_show_duration: [ 3 ]
+  command_show_delay: [ 1 ]
+  explosion_duration: [ 6 ]
+  explosion_delay: [ 18 ]
+  visual_feedback: True
+  reward_command_failure: 0.0
+  reward_command_success: 0.1
+num_envs: 32
+gamma: 0.995
+lamda: 0.95
+updates: 10000
+epochs: 3
+T: 512
+mini_batch_size: 32
+learning_rate_initial: 2.75e-4
+learning_rate_final: 1.0e-5
+clip_range_initial: 0.1
+clip_range_final: 0.1
+entropy_loss_coefficient_initial: 1.0e-4
+entropy_loss_coefficient_final: 1.0e-6
+value_loss_coefficient: 0.25
+hidden_layer_size: 512
+max_grad_norm: 0.25
+recurrent_type: "GRU"
+num_layers: 3
+use_norm: True
+use_residual: True
+sequence_length: -1
+hidden_state_size: 512
+use_fused_kernel: True

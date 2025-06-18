@@ -1,0 +1,63 @@
+env_type: "MemoryGym"
+env_name: "SearingSpotlights-v0"
+reset_params:
+  start-seed: 0
+  num-seeds: 100000
+  max_steps: 256
+  initial_spawns: 4
+  num_spawns: 30
+  initial_spawn_interval: 30
+  spawn_interval_threshold: 10
+  spawn_interval_decay: 0.95
+  spot_min_radius: 7.5
+  spot_max_radius: 13.75
+  spot_min_speed: 0.0025
+  spot_max_speed: 0.0075
+  spot_damage: 1.0
+  visual_feedback: True
+  black_background: False
+  hide_chessboard: False
+  light_dim_off_duration: 6
+  light_threshold: 255
+  num_coins: [1]
+  coin_scale: 0.375
+  coins_visible: False
+  use_exit: True
+  exit_visible: False
+  exit_scale: 0.5
+  agent_speed: 3.0
+  agent_health: 5
+  agent_scale: 0.25
+  agent_visible: False
+  sample_agent_position: True
+  show_last_action: True
+  show_last_positive_reward: True
+  reward_inside_spotlight: 0.0
+  reward_outside_spotlight: 0.0
+  reward_death: 0.0
+  reward_exit: 1.0
+  reward_max_steps: 0.0
+  reward_coin: 0.25
+num_envs: 32
+gamma: 0.995
+lamda: 0.95
+updates: 10000
+epochs: 3
+T: 512
+mini_batch_size: 32
+learning_rate_initial: 6.0e-4
+learning_rate_final: 2.0e-4
+clip_range_initial: 0.1
+clip_range_final: 0.1
+entropy_loss_coefficient_initial: 1.0e-4
+entropy_loss_coefficient_final: 1.0e-6
+value_loss_coefficient: 0.25
+hidden_layer_size: 512
+max_grad_norm: 0.25
+recurrent_type: "GRU"
+num_layers: 3
+use_norm: True
+use_residual: True
+sequence_length: -1
+hidden_state_size: 512
+use_fused_kernel: True

@@ -11,11 +11,12 @@ def log_g(x):
     return torch.where(x >= 0, torch.log(F.relu(x) + 0.5), -F.softplus(-x))
 
 
+@torch.jit.script
 def parallel_scan(log_coeffs, log_values):
-    a_star = F.pad(torch.cumsum(log_coeffs, dim=1), (0, 0, 1, 0))
-    log_h0_plus_b_star = torch.logcumsumexp(log_values - a_star, dim=1)
+    a_star = log_coeffs.cumsum(dim=1)
+    log_h0_plus_b_star = (log_values - a_star).logcumsumexp(dim=1)
     log_h = a_star + log_h0_plus_b_star
-    return torch.exp(log_h)[:, 1:]
+    return log_h.exp()
 
 
 class MinGRU(nn.Module):
@@ -46,6 +47,11 @@ class MinGRU(nn.Module):
         log_coeffs = -F.softplus(k)
         log_h0 = log_g(h0)
         log_tilde_h = log_g(self.linear_h(x))
+        log_coeffs = F.pad(log_coeffs, (0, 0, 1, 0))
         log_values = torch.cat([log_h0, log_z + log_tilde_h], dim=1)
+
         h_0_t = parallel_scan(log_coeffs, log_values)
-        return h_0_t[:, -seq_len:], h_0_t[:, -1:]
+
+        out = h_0_t[:, -seq_len:]
+
+        return out, out[:, -1:]

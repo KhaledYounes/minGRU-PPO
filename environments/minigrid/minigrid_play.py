@@ -7,19 +7,17 @@ from minigrid_env_modified import Minigrid
 from model import ActorCritic
 
 
-def test_agent(env_name="MiniGrid-MemoryS9-v0",
+def test_agent(configuration,
                model_path="best_model.pth",
                episodes=5,
                device="cpu"):
-    env = Minigrid(env_name=env_name, realtime_mode=True)
-    obs_shape = env.observation_space.shape
-    action_dim = env.action_space.n
-    config = OmegaConf.load("../../configurations/minigrid.yaml")
-    config.recurrent_type = "minGRU"
+
+    env = Minigrid(env_name=configuration.env_name, realtime_mode=True)
+
     model = ActorCritic(
-        config=config,
-        observation_shape=obs_shape,
-        nb_actions=action_dim,
+        config=configuration,
+        observation_shape=env.observation_space_shape,
+        action_spaces=env.action_spaces
     ).to(device)
 
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=False))
@@ -35,16 +33,11 @@ def test_agent(env_name="MiniGrid-MemoryS9-v0",
 
         while not done:
             env.render()
-            logits, value, new_hidden = model(obs, hidden_state)
-            action = torch.argmax(logits, dim=1).cpu().numpy()
-            obs_, reward, done_, truncated_, info = env.step(action)
+            policy_logits, value, hidden_state = model(obs, hidden_state)
+            actions = [torch.argmax(logits, dim=1) for logits in policy_logits]
+            actions_tensor = torch.stack(actions, dim=1)
+            obs_, reward, done, truncated_, info = env.step(actions_tensor.cpu().numpy())
             total_reward += reward
-
-            if done_ or truncated_:
-                done = True
-            else:
-                hidden_state = new_hidden
-
             obs = torch.tensor(obs_, dtype=torch.float32, device=device).unsqueeze(0).unsqueeze(1)
             time.sleep(1)
         env.render()
@@ -55,9 +48,11 @@ def test_agent(env_name="MiniGrid-MemoryS9-v0",
 
 
 if __name__ == "__main__":
+    config = OmegaConf.load("../../configurations/minigrid.yaml")
+    # config.recurrent_type = "GRU"
     test_agent(
-        env_name="MiniGrid-MemoryS9-v0",
-        model_path="../../models/model_800_minGRU.pth",
+        configuration=config,
+        model_path="../../models/MiniGrid-MemoryS9-v0_800_GRU.pth",
         episodes=5,
         device="cpu"
     )

@@ -1,0 +1,38 @@
+env_type: "MemoryGym"
+env_name: "MysteryPath-v0"
+reset_params:
+  start-seed: 0
+  num-seeds: 100000
+  agent_scale: 0.25
+  cardinal_origin_choice: [ 0, 1, 2, 3 ]
+  show_origin: True
+  show_goal: True
+  visual_feedback: True
+  reward_goal: 1.0
+  reward_fall_off: 0.0
+  reward_path_progress: 0.0
+  reward_step: 0.0
+num_envs: 32
+gamma: 0.995
+lamda: 0.95
+updates: 10000
+epochs: 3
+T: 512
+mini_batch_size: 32
+learning_rate_initial: 2.75e-4
+learning_rate_final: 1.0e-5
+clip_range_initial: 0.1
+clip_range_final: 0.1
+entropy_loss_coefficient_initial: 1.0e-4
+entropy_loss_coefficient_final: 1.0e-5
+value_loss_coefficient: 0.25
+hidden_layer_size: 512
+max_grad_norm: 0.25
+recurrent_type: "GRU"
+num_layers: 3
+use_norm: True
+use_residual: True
+sequence_length: -1
+hidden_state_size: 512
+num_vec_encoder_units: 128
+use_fused_kernel: True
