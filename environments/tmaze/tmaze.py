@@ -83,6 +83,9 @@ class TMazeBase(gym.Env):
             low=-1.0, high=1.0, shape=(obs_dim,), dtype=np.float32
         )
 
+        self.oracle_visited_before = False
+        self.max_x_reached = 0
+
     def position_encoding(self, x: int, y: int, goal_y: int):
         if x == 0:
             # oracle position
@@ -135,9 +138,19 @@ class TMazeBase(gym.Env):
             # a penalty (when t > o) if x < t - o (desired: x = t - o)
             rew = float(x < self.time_step - self.oracle_length) * self.penalty
             if x == 0:
-                return rew + self.distract_reward
-            else:
-                return rew
+                rew += self.distract_reward
+
+            # Oracle visit bonus (first time only)
+            if x == 0 and not self.oracle_visited_before:
+                rew += 0.1
+                self.oracle_visited_before = True
+
+            # Progress reward
+            if x > self.max_x_reached:
+                self.max_x_reached = x
+                rew += (0.1 / self.corridor_length)
+
+            return rew
 
     def step(self, action):
         self.time_step += 1
@@ -159,6 +172,10 @@ class TMazeBase(gym.Env):
 
         self.oracle_visited = False
         self.time_step = 0
+
+        self.oracle_visited_before = False
+        self.max_x_reached = self.oracle_length
+
         return self.get_obs(), {}
 
 
@@ -195,7 +212,7 @@ class TMazeClassicActive(TMazeBase):
     def __init__(
             self,
             corridor_length: int = 10,
-            goal_reward: float = 1.0,
+            goal_reward: float = 0.8,
             penalty: float = 0.0,
             distract_reward: float = 0.0,
     ):

@@ -1,6 +1,5 @@
 #!/bin/bash
-#SBATCH -t 2:00:00
-#SBATCH -q express
+#SBATCH -t 24:00:00
 #SBATCH --cpus-per-task=32
 #SBATCH --gres=gpu:a100:1
 #SBATCH -J "Train minigrid GRU-PPO vs minGRU-PPO"

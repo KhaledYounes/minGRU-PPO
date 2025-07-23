@@ -1,6 +1,6 @@
 import gymnasium as gym
 
-from .tmaze import TMazeClassicPassive
+from .tmaze import TMazeClassicActive
 
 
 class TMaze(gym.Env):
@@ -8,8 +8,7 @@ class TMaze(gym.Env):
         self._realtime_mode = realtime_mode
         render_mode = "human" if realtime_mode else "rgb_array"
 
-        self._env = TMazeClassicPassive(corridor_length=corridor_length, goal_reward=1.0,
-                                        penalty=(-1.0 / corridor_length))
+        self._env = TMazeClassicActive(corridor_length=corridor_length)
 
         self.observation_space = self._env.observation_space
 

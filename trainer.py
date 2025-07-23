@@ -63,6 +63,8 @@ class Trainer:
         self.max_reward = -float("inf")
 
     def train(self):
+        start_f = torch.cuda.Event(enable_timing=True)
+        end_f = torch.cuda.Event(enable_timing=True)
         obs, _ = self.envs.reset()
         hidden = self.model.init_hidden(self.num_envs, self.device)
         pbar = trange(self.updates, desc="PPO Training", unit="update")
@@ -78,6 +80,10 @@ class Trainer:
                 torch.save(self.model.state_dict(),
                            f"models/{self.env_name}_{iteration + 1}_{self.model.recurrent_type}.pth")
             self.total_rewards_for_iteration = [[] for _ in range(self.num_envs)]
+
+            torch.cuda.synchronize()
+            start_f.record()
+
             with torch.no_grad():
                 for t in range(self.T):
                     base_obs_tensor, additional_obs_tensor = deconstruct_obs(self.has_additional_info, obs, self.device)
@@ -104,12 +110,36 @@ class Trainer:
                                 if reward_info > self.max_reward:
                                     self.max_reward = reward_info
                 base_obs_tensor, additional_obs_tensor = deconstruct_obs(self.has_additional_info, obs, self.device)
-                _, next_values, _ = self.model((base_obs_tensor, additional_obs_tensor), hidden)
-            self.buffer.state_values[:, self.T] = next_values
-            self.buffer.compute_gae(self.gamma, self.lamda)
+                _, last_value, _ = self.model((base_obs_tensor, additional_obs_tensor), hidden)
+
+            end_f.record()
+            torch.cuda.synchronize()
+            time_data_collection = start_f.elapsed_time(end_f) / 1000.0
+
+            torch.cuda.synchronize()
+            start_f.record()
+
+            self.buffer.compute_gae(last_value, self.gamma, self.lamda)
+
+            end_f.record()
+            torch.cuda.synchronize()
+            time_age = start_f.elapsed_time(end_f) / 1000.0
+
+            torch.cuda.synchronize()
+            start_f.record()
+
             self.train_mini_batches(clip_range, lr, entropy_loss_coefficient)
+
+            end_f.record()
+            torch.cuda.synchronize()
+            time_train = start_f.elapsed_time(end_f) / 1000.0
+
             avg_reward = np.mean([np.mean(r) for r in self.total_rewards_for_iteration if r])
-            pbar.set_postfix({"avg_reward": f"{avg_reward:.4f}", "max_reward": f"{self.max_reward:.1f}"})
+
+            pbar.set_postfix(
+                {"avg_reward": f"{avg_reward:.4f}", "max_reward": f"{self.max_reward:.1f}",
+                 "data collection time": f"{time_data_collection:.2f}", "AGE computation time": f"{time_age:.2f}",
+                 "training time": f"{time_train:.2f}"})
 
     def train_mini_batches(self, clip_range, lr, entropy_loss_coefficient):
         data_loader = self.buffer.get_mini_batches()

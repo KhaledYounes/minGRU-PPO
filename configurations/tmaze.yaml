@@ -5,9 +5,9 @@ gamma: 0.995
 lamda: 0.95
 updates: 1000
 epochs: 3
-T: 50005
-corridor_length: 5000
-mini_batch_size: 10
+T: 50000
+corridor_length: 4997
+mini_batch_size: 8
 learning_rate_initial: 2.0e-4
 learning_rate_final: 1.0e-4
 clip_range_initial: 0.15
@@ -22,5 +22,5 @@ num_layers: 3
 use_norm: True
 use_residual: True
 sequence_length: -1
-hidden_state_size: 4
+hidden_state_size: 8
 use_fused_kernel: True

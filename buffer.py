@@ -26,7 +26,7 @@ class RolloutBuffer:
                                    dtype=torch.long, device=device)
         self.log_probs = torch.zeros((self.num_envs, self.T, action_space_dimensions),
                                      dtype=torch.float32, device=device)
-        self.state_values = torch.zeros((self.num_envs, self.T + 1), dtype=torch.float32, device=device)
+        self.state_values = torch.zeros((self.num_envs, self.T), dtype=torch.float32, device=device)
         self.rewards = torch.zeros((self.num_envs, self.T), dtype=torch.float32, device=device)
         self.dones = torch.zeros((self.num_envs, self.T), dtype=torch.float32, device=device)
         self.hidden = torch.zeros((self.num_envs, self.T, self.num_layers, self.hidden_state_size),
@@ -43,15 +43,16 @@ class RolloutBuffer:
         self.rewards[:, t] = reward
         self.dones[:, t] = done
 
-    def compute_gae(self, gamma, gae_lambda):
-        for i in range(self.num_envs):
-            adv = 0
-            for t in reversed(range(self.T)):
-                non_terminal = 1.0 - self.dones[i, t]
-                delta = self.rewards[i, t] + gamma * self.state_values[i, t + 1] * non_terminal - self.state_values[
-                    i, t]
-                adv = delta + gamma * gae_lambda * non_terminal * adv
-                self.advantages[i, t] = adv
+    def compute_gae(self, last_value, gamma, gae_lambda):
+        last_advantage = 0
+        non_terminal = 1.0 - self.dones
+        for t in reversed(range(self.T)):
+            last_value = last_value * non_terminal[:, t]
+            last_advantage = last_advantage * non_terminal[:, t]
+            delta = self.rewards[:, t] + gamma * last_value - self.state_values[:, t]
+            last_advantage = delta + gamma * gae_lambda * last_advantage
+            self.advantages[:, t] = last_advantage
+            last_value = self.state_values[:, t]
 
     def get_mini_batches(self):
         base_observation_list = []
